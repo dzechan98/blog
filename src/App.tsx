@@ -1,12 +1,26 @@
-import { Button } from "@/components/ui/button";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/auth-context";
+import { Layout } from "@/components/layout";
+import { Home } from "@/pages/home";
+import { Login } from "@/pages/login";
+import { Register } from "@/pages/register";
+import { ThemeProvider } from "@/contexts/theme-context";
 
 function App() {
   return (
-    <div className="min-w-screen flex flex-col items-center justify-center h-screen">
-      <h1 className="text-2xl font-bold mb-4">Welcome to My App</h1>
-      <p className="text-lg mb-6">This is a simple React application.</p>
-      <Button>Click me</Button>
-    </div>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Routes>
+          </Layout>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
