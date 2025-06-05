@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   collection,
@@ -32,11 +32,11 @@ import {
   Users,
   FileText,
 } from "lucide-react";
+import { BlogFilters, type FilterState } from "@/components/blog-filters";
 
 export const Home: React.FC = () => {
   const { currentUser } = useAuth();
-  const [featuredBlogs, setFeaturedBlogs] = useState<Blog[]>([]);
-  const [recentBlogs, setRecentBlogs] = useState<Blog[]>([]);
+  const [allBlogs, setAllBlogs] = useState<Blog[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [stats, setStats] = useState({
     totalBlogs: 0,
@@ -44,43 +44,85 @@ export const Home: React.FC = () => {
     totalCategories: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    category: "",
+    sortBy: "newest",
+    tags: [],
+  });
+
+  // Filter and sort blogs based on current filters
+  const filteredBlogs = useMemo(() => {
+    let filtered = [...allBlogs];
+
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        (blog) =>
+          blog.title.toLowerCase().includes(searchLower) ||
+          blog.excerpt.toLowerCase().includes(searchLower) ||
+          blog.content.toLowerCase().includes(searchLower) ||
+          blog.authorName.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Category filter
+    if (filters.category) {
+      filtered = filtered.filter(
+        (blog) => blog.categoryId === filters.category
+      );
+    }
+
+    // Tags filter
+    if (filters.tags.length > 0) {
+      filtered = filtered.filter((blog) =>
+        filters.tags.some((tag) =>
+          blog.tags.some((blogTag) =>
+            blogTag.toLowerCase().includes(tag.toLowerCase())
+          )
+        )
+      );
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (filters.sortBy) {
+        case "oldest":
+          return (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0);
+        case "title-asc":
+          return a.title.localeCompare(b.title);
+        case "title-desc":
+          return b.title.localeCompare(a.title);
+        case "newest":
+        default:
+          return (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0);
+      }
+    });
+
+    return filtered;
+  }, [allBlogs, filters]);
+
+  const featuredBlogs = filteredBlogs.slice(0, 3);
+  const recentBlogs = filteredBlogs.slice(3, 12);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch featured blogs (latest 3)
-        const featuredQuery = query(
+        // Fetch all published blogs
+        const blogsQuery = query(
           collection(db, "blogs"),
           where("published", "==", true),
-          orderBy("createdAt", "desc"),
-          limit(3)
+          orderBy("createdAt", "desc")
         );
-        const featuredSnapshot = await getDocs(featuredQuery);
-        const featuredData = featuredSnapshot.docs.map((doc) => ({
+        const blogsSnapshot = await getDocs(blogsQuery);
+        const blogsData = blogsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
           createdAt: doc.data().createdAt?.toDate(),
           updatedAt: doc.data().updatedAt?.toDate(),
         })) as Blog[];
-        setFeaturedBlogs(featuredData);
-
-        // Fetch recent blogs (next 6)
-        const recentQuery = query(
-          collection(db, "blogs"),
-          where("published", "==", true),
-          orderBy("createdAt", "desc"),
-          limit(9)
-        );
-        const recentSnapshot = await getDocs(recentQuery);
-        const recentData = recentSnapshot.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate(),
-            updatedAt: doc.data().updatedAt?.toDate(),
-          }))
-          .slice(3) as Blog[]; // Skip first 3 (featured)
-        setRecentBlogs(recentData);
+        setAllBlogs(blogsData);
 
         // Fetch categories
         const categoriesQuery = query(
@@ -97,14 +139,13 @@ export const Home: React.FC = () => {
         setCategories(categoriesData);
 
         // Fetch stats
-        const blogsSnapshot = await getDocs(collection(db, "blogs"));
         const usersSnapshot = await getDocs(collection(db, "users"));
         const allCategoriesSnapshot = await getDocs(
           collection(db, "categories")
         );
 
         setStats({
-          totalBlogs: blogsSnapshot.size,
+          totalBlogs: blogsData.length,
           totalUsers: usersSnapshot.size,
           totalCategories: allCategoriesSnapshot.size,
         });
@@ -120,14 +161,14 @@ export const Home: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-64 pt-16">
         <div className="text-lg">Đang tải...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 pt-16">
       {/* Hero Section */}
       <section className="text-center py-12 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-2xl">
         <div className="max-w-4xl mx-auto px-4">
@@ -198,6 +239,13 @@ export const Home: React.FC = () => {
         </Card>
       </section>
 
+      {/* Filters */}
+      <BlogFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        totalResults={filteredBlogs.length}
+      />
+
       {/* Featured Blogs */}
       {featuredBlogs.length > 0 && (
         <section>
@@ -205,10 +253,14 @@ export const Home: React.FC = () => {
             <div>
               <h2 className="text-3xl font-bold text-foreground flex items-center">
                 <TrendingUp className="h-8 w-8 mr-3 text-orange-600" />
-                Bài viết nổi bật
+                {filters.search || filters.category || filters.tags.length > 0
+                  ? "Kết quả tìm kiếm"
+                  : "Bài viết nổi bật"}
               </h2>
               <p className="text-muted-foreground mt-2">
-                Những bài viết mới nhất và được quan tâm nhiều nhất
+                {filters.search || filters.category || filters.tags.length > 0
+                  ? "Các bài viết phù hợp với bộ lọc của bạn"
+                  : "Những bài viết mới nhất và được quan tâm nhiều nhất"}
               </p>
             </div>
           </div>
@@ -218,7 +270,12 @@ export const Home: React.FC = () => {
               <Card
                 key={blog.id}
                 className={`hover:shadow-xl transition-all duration-300 ${
-                  index === 0 ? "lg:col-span-2 lg:row-span-2" : ""
+                  index === 0 &&
+                  !filters.search &&
+                  !filters.category &&
+                  filters.tags.length === 0
+                    ? "lg:col-span-2 lg:row-span-2"
+                    : ""
                 }`}
               >
                 <div className="aspect-video bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-t-lg flex items-center justify-center">
@@ -234,7 +291,12 @@ export const Home: React.FC = () => {
                   </div>
                   <CardTitle
                     className={`line-clamp-2 ${
-                      index === 0 ? "text-2xl" : "text-lg"
+                      index === 0 &&
+                      !filters.search &&
+                      !filters.category &&
+                      filters.tags.length === 0
+                        ? "text-2xl"
+                        : "text-lg"
                     }`}
                   >
                     <Link
@@ -246,7 +308,12 @@ export const Home: React.FC = () => {
                   </CardTitle>
                   <CardDescription
                     className={`${
-                      index === 0 ? "line-clamp-4" : "line-clamp-3"
+                      index === 0 &&
+                      !filters.search &&
+                      !filters.category &&
+                      filters.tags.length === 0
+                        ? "line-clamp-4"
+                        : "line-clamp-3"
                     }`}
                   >
                     {blog.excerpt}
@@ -285,38 +352,41 @@ export const Home: React.FC = () => {
         </section>
       )}
 
-      {/* Categories Section */}
-      {categories.length > 0 && (
-        <section>
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-foreground mb-4">
-              Khám phá theo chủ đề
-            </h2>
-            <p className="text-muted-foreground">
-              Tìm hiểu các bài viết theo từng lĩnh vực quan tâm
-            </p>
-          </div>
+      {/* Categories Section - Only show if no filters applied */}
+      {categories.length > 0 &&
+        !filters.search &&
+        !filters.category &&
+        filters.tags.length === 0 && (
+          <section>
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-foreground mb-4">
+                Khám phá theo chủ đề
+              </h2>
+              <p className="text-muted-foreground">
+                Tìm hiểu các bài viết theo từng lĩnh vực quan tâm
+              </p>
+            </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category) => (
-              <Card
-                key={category.id}
-                className="hover:shadow-lg transition-shadow cursor-pointer group"
-              >
-                <CardHeader className="text-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <BookOpen className="h-6 w-6 text-white" />
-                  </div>
-                  <CardTitle className="group-hover:text-primary transition-colors">
-                    {category.name}
-                  </CardTitle>
-                  <CardDescription>{category.description}</CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </section>
-      )}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {categories.map((category) => (
+                <Card
+                  key={category.id}
+                  className="hover:shadow-lg transition-shadow cursor-pointer group"
+                >
+                  <CardHeader className="text-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                      <BookOpen className="h-6 w-6 text-white" />
+                    </div>
+                    <CardTitle className="group-hover:text-primary transition-colors">
+                      {category.name}
+                    </CardTitle>
+                    <CardDescription>{category.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
       {/* Recent Blogs */}
       {recentBlogs.length > 0 && (
@@ -324,10 +394,14 @@ export const Home: React.FC = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-foreground">
-                Bài viết gần đây
+                {filters.search || filters.category || filters.tags.length > 0
+                  ? "Thêm kết quả"
+                  : "Bài viết gần đây"}
               </h2>
               <p className="text-muted-foreground mt-2">
-                Cập nhật những nội dung mới nhất từ cộng đồng
+                {filters.search || filters.category || filters.tags.length > 0
+                  ? "Các bài viết khác phù hợp"
+                  : "Cập nhật những nội dung mới nhất từ cộng đồng"}
               </p>
             </div>
           </div>
@@ -380,45 +454,51 @@ export const Home: React.FC = () => {
         </section>
       )}
 
-      {/* Call to Action */}
-      <section className="text-center py-12 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-2xl">
-        <div className="max-w-2xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-foreground mb-4">
-            Sẵn sàng chia sẻ câu chuyện của bạn?
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            Tham gia cộng đồng BlogApp để chia sẻ kiến thức, kinh nghiệm và kết
-            nối với những người có cùng đam mê.
-          </p>
-          {!currentUser ? (
-            <Button size="lg" asChild>
-              <Link to="/register">
-                Đăng ký ngay
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          ) : (
-            <Button size="lg" asChild>
-              <Link to="/dashboard">
-                Đi tới Dashboard
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          )}
-        </div>
-      </section>
+      {/* Call to Action - Only show if no filters applied */}
+      {!filters.search && !filters.category && filters.tags.length === 0 && (
+        <section className="text-center py-12 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-2xl">
+          <div className="max-w-2xl mx-auto px-4">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
+              Sẵn sàng chia sẻ câu chuyện của bạn?
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Tham gia cộng đồng BlogApp để chia sẻ kiến thức, kinh nghiệm và
+              kết nối với những người có cùng đam mê.
+            </p>
+            {!currentUser ? (
+              <Button size="lg" asChild>
+                <Link to="/register">
+                  Đăng ký ngay
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            ) : (
+              <Button size="lg" asChild>
+                <Link to="/dashboard">
+                  Đi tới Dashboard
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Empty State */}
-      {featuredBlogs.length === 0 && recentBlogs.length === 0 && (
+      {filteredBlogs.length === 0 && (
         <section className="text-center py-12">
           <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-2xl font-semibold text-foreground mb-2">
-            Chưa có bài viết nào
+            {allBlogs.length === 0
+              ? "Chưa có bài viết nào"
+              : "Không tìm thấy bài viết"}
           </h3>
           <p className="text-muted-foreground mb-6">
-            Hãy là người đầu tiên chia sẻ câu chuyện của bạn!
+            {allBlogs.length === 0
+              ? "Hãy là người đầu tiên chia sẻ câu chuyện của bạn!"
+              : "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm"}
           </p>
-          {currentUser && (
+          {currentUser && allBlogs.length === 0 && (
             <Button asChild>
               <Link to="/create-blog">Tạo bài viết đầu tiên</Link>
             </Button>

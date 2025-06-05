@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -10,113 +10,207 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useAuth } from "@/contexts/auth-context";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { registerSchema, type RegisterFormData } from "@/lib/validations";
+import { useState } from "react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export const Register: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      displayName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-    if (password !== confirmPassword) {
-      return setError("Mật khẩu xác nhận không khớp");
-    }
-
-    if (password.length < 6) {
-      return setError("Mật khẩu phải có ít nhất 6 ký tự");
-    }
-
+  const onSubmit = async (data: RegisterFormData) => {
     try {
       setError("");
-      setLoading(true);
-      await register(email, password, displayName);
+      await register(data.email, data.password, data.displayName);
       navigate("/");
-    } catch (error) {
-      console.log(error);
-      setError("Đăng ký thất bại. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      console.error("Register error:", error);
+      if (error.code === "auth/email-already-in-use") {
+        setError("Email này đã được sử dụng");
+      } else if (error.code === "auth/invalid-email") {
+        setError("Email không hợp lệ");
+      } else if (error.code === "auth/operation-not-allowed") {
+        setError("Đăng ký bằng email/mật khẩu không được phép");
+      } else if (error.code === "auth/weak-password") {
+        setError("Mật khẩu quá yếu");
+      } else {
+        setError("Đăng ký thất bại. Vui lòng thử lại");
+      }
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
-        <CardHeader>
+        <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">Đăng ký</CardTitle>
           <CardDescription className="text-center">
-            Tạo tài khoản mới
+            Tạo tài khoản mới để bắt đầu viết blog
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
-            <div className="space-y-2">
-              <Label htmlFor="displayName">Tên hiển thị</Label>
-              <Input
-                id="displayName"
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="displayName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tên hiển thị</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Nhập tên hiển thị"
+                        autoComplete="name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="example@email.com"
+                        autoComplete="email"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mật khẩu</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Nhập mật khẩu"
+                          autoComplete="new-password"
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Xác nhận mật khẩu</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Nhập lại mật khẩu"
+                          autoComplete="new-password"
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Đang đăng ký..." : "Đăng ký"}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang đăng ký...
+                  </>
+                ) : (
+                  "Đăng ký"
+                )}
+              </Button>
+            </form>
+          </Form>
 
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600">
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
               Đã có tài khoản?{" "}
-              <Link to="/login" className="text-blue-600 hover:underline">
+              <Link
+                to="/login"
+                className="text-primary hover:underline font-medium"
+              >
                 Đăng nhập ngay
               </Link>
             </p>
