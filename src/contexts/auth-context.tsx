@@ -57,12 +57,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     );
     await updateProfile(user, { displayName });
 
-    // Create user profile in Firestore
     const userProfile: User = {
       id: user.uid,
       email: user.email!,
       displayName,
-      role: "user", // Default role
+      role: "user",
       createdAt: new Date(),
     };
 
@@ -78,7 +77,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setCurrentUser(user);
 
       if (user) {
-        // Fetch user profile from Firestore
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           setUserProfile(userDoc.data() as User);

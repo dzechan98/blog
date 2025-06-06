@@ -34,14 +34,14 @@ export const blogSchema = z.object({
     .min(1, "Tiêu đề là bắt buộc")
     .min(5, "Tiêu đề phải có ít nhất 5 ký tự")
     .max(200, "Tiêu đề không được quá 200 ký tự"),
-  excerpt: z.string().max(500, "Tóm tắt không được quá 500 ký tự").optional(),
   content: z
     .string()
     .min(1, "Nội dung là bắt buộc")
     .min(50, "Nội dung phải có ít nhất 50 ký tự"),
   categoryId: z.string().min(1, "Danh mục là bắt buộc"),
+  imageUrl: z.string().url("URL ảnh không hợp lệ").optional().or(z.literal("")),
   tags: z.string().optional(),
-  published: z.boolean().default(false),
+  published: z.boolean().default(false).optional(),
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;

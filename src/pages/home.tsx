@@ -1,6 +1,3 @@
-"use client";
-
-import type React from "react";
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -51,30 +48,25 @@ export const Home: React.FC = () => {
     tags: [],
   });
 
-  // Filter and sort blogs based on current filters
   const filteredBlogs = useMemo(() => {
     let filtered = [...allBlogs];
 
-    // Search filter
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(
         (blog) =>
           blog.title.toLowerCase().includes(searchLower) ||
-          blog.excerpt.toLowerCase().includes(searchLower) ||
           blog.content.toLowerCase().includes(searchLower) ||
           blog.authorName.toLowerCase().includes(searchLower)
       );
     }
 
-    // Category filter
     if (filters.category) {
       filtered = filtered.filter(
         (blog) => blog.categoryId === filters.category
       );
     }
 
-    // Tags filter
     if (filters.tags.length > 0) {
       filtered = filtered.filter((blog) =>
         filters.tags.some((tag) =>
@@ -85,7 +77,6 @@ export const Home: React.FC = () => {
       );
     }
 
-    // Sort
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case "oldest":
@@ -109,22 +100,33 @@ export const Home: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch all published blogs
+        console.log("Fetching published blogs...");
         const blogsQuery = query(
           collection(db, "blogs"),
           where("published", "==", true),
           orderBy("createdAt", "desc")
         );
         const blogsSnapshot = await getDocs(blogsQuery);
-        const blogsData = blogsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate(),
-          updatedAt: doc.data().updatedAt?.toDate(),
-        })) as Blog[];
+        console.log("Published blogs count:", blogsSnapshot.size);
+
+        const blogsData = blogsSnapshot.docs.map((doc) => {
+          const data = doc.data();
+          console.log("Blog data:", {
+            id: doc.id,
+            title: data.title,
+            published: data.published,
+          });
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate(),
+            updatedAt: data.updatedAt?.toDate(),
+          };
+        }) as Blog[];
+
+        console.log("Processed blogs data:", blogsData);
         setAllBlogs(blogsData);
 
-        // Fetch categories
         const categoriesQuery = query(
           collection(db, "categories"),
           orderBy("name"),
@@ -138,7 +140,6 @@ export const Home: React.FC = () => {
         })) as Category[];
         setCategories(categoriesData);
 
-        // Fetch stats
         const usersSnapshot = await getDocs(collection(db, "users"));
         const allCategoriesSnapshot = await getDocs(
           collection(db, "categories")
@@ -239,6 +240,12 @@ export const Home: React.FC = () => {
         </Card>
       </section>
 
+      {/* Debug info */}
+      <div className="text-sm text-muted-foreground">
+        Debug: Tổng blogs: {allBlogs.length}, Filtered: {filteredBlogs.length},
+        Featured: {featuredBlogs.length}
+      </div>
+
       {/* Filters */}
       <BlogFilters
         filters={filters}
@@ -278,9 +285,19 @@ export const Home: React.FC = () => {
                     : ""
                 }`}
               >
-                <div className="aspect-video bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-t-lg flex items-center justify-center">
-                  <BookOpen className="h-12 w-12 text-blue-600" />
-                </div>
+                {blog.imageUrl ? (
+                  <div className="aspect-video overflow-hidden rounded-t-lg">
+                    <img
+                      src={blog.imageUrl || "/placeholder.svg"}
+                      alt={blog.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-video bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-t-lg flex items-center justify-center">
+                    <BookOpen className="h-12 w-12 text-blue-600" />
+                  </div>
+                )}
                 <CardHeader>
                   <div className="flex justify-between items-start mb-2">
                     <Badge variant="secondary">{blog.categoryName}</Badge>
@@ -316,7 +333,10 @@ export const Home: React.FC = () => {
                         : "line-clamp-3"
                     }`}
                   >
-                    {blog.excerpt}
+                    {blog.content
+                      ? blog.content.replace(/<[^>]*>/g, "").substring(0, 150) +
+                        "..."
+                      : "Không có nội dung"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -332,7 +352,7 @@ export const Home: React.FC = () => {
                       </Link>
                     </Button>
                   </div>
-                  {blog.tags.length > 0 && (
+                  {blog.tags && blog.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-3">
                       {blog.tags.slice(0, 3).map((tag, tagIndex) => (
                         <Badge
@@ -409,6 +429,19 @@ export const Home: React.FC = () => {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {recentBlogs.map((blog) => (
               <Card key={blog.id} className="hover:shadow-lg transition-shadow">
+                {blog.imageUrl ? (
+                  <div className="aspect-video overflow-hidden rounded-t-lg">
+                    <img
+                      src={blog.imageUrl || "/placeholder.svg"}
+                      alt={blog.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-video bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-t-lg flex items-center justify-center">
+                    <BookOpen className="h-12 w-12 text-blue-600" />
+                  </div>
+                )}
                 <CardHeader>
                   <div className="flex justify-between items-start mb-2">
                     <Badge variant="secondary">{blog.categoryName}</Badge>
@@ -426,7 +459,10 @@ export const Home: React.FC = () => {
                     </Link>
                   </CardTitle>
                   <CardDescription className="line-clamp-3">
-                    {blog.excerpt}
+                    {blog.content
+                      ? blog.content.replace(/<[^>]*>/g, "").substring(0, 150) +
+                        "..."
+                      : "Không có nội dung"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -434,7 +470,7 @@ export const Home: React.FC = () => {
                     <User className="h-4 w-4 mr-1" />
                     <span>Bởi {blog.authorName}</span>
                   </div>
-                  {blog.tags.length > 0 && (
+                  {blog.tags && blog.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-3">
                       {blog.tags.slice(0, 2).map((tag, index) => (
                         <Badge
