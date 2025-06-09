@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,15 +20,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useAuth } from "@/contexts/auth-context";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { registerSchema, type RegisterFormData } from "@/lib/validations";
 import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState("");
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -43,21 +43,21 @@ export const Register: React.FC = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      setError("");
+      toast.error("");
       await register(data.email, data.password, data.displayName);
       navigate("/");
     } catch (error: any) {
       console.error("Register error:", error);
       if (error.code === "auth/email-already-in-use") {
-        setError("Email này đã được sử dụng");
+        toast.error("Email này đã được sử dụng");
       } else if (error.code === "auth/invalid-email") {
-        setError("Email không hợp lệ");
+        toast.error("Email không hợp lệ");
       } else if (error.code === "auth/operation-not-allowed") {
-        setError("Đăng ký bằng email/mật khẩu không được phép");
+        toast.error("Đăng ký bằng email/mật khẩu không được phép");
       } else if (error.code === "auth/weak-password") {
-        setError("Mật khẩu quá yếu");
+        toast.error("Mật khẩu quá yếu");
       } else {
-        setError("Đăng ký thất bại. Vui lòng thử lại");
+        toast.error("Đăng ký thất bại. Vui lòng thử lại");
       }
     }
   };
@@ -74,12 +74,6 @@ export const Register: React.FC = () => {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
               <FormField
                 control={form.control}
                 name="displayName"
@@ -97,7 +91,6 @@ export const Register: React.FC = () => {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="email"
@@ -116,7 +109,6 @@ export const Register: React.FC = () => {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="password"
@@ -150,7 +142,6 @@ export const Register: React.FC = () => {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="confirmPassword"
@@ -186,7 +177,6 @@ export const Register: React.FC = () => {
                   </FormItem>
                 )}
               />
-
               <Button
                 type="submit"
                 className="w-full"
@@ -203,7 +193,6 @@ export const Register: React.FC = () => {
               </Button>
             </form>
           </Form>
-
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Đã có tài khoản?{" "}

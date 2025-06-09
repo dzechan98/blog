@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -36,6 +35,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { blogSchema, type BlogFormData } from "@/lib/validations";
 import { uploadImageToImgbb } from "@/lib/image-upload";
 import { X, ImageIcon, Loader2, FileText } from "lucide-react";
+import { toast } from "sonner";
 
 export const CreateBlog: React.FC = () => {
   const { currentUser, userProfile } = useAuth();
@@ -44,7 +44,6 @@ export const CreateBlog: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [error, setError] = useState("");
 
   const form = useForm<BlogFormData>({
     resolver: zodResolver(blogSchema),
@@ -81,12 +80,12 @@ export const CreateBlog: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError("Kích thước ảnh không được vượt quá 5MB");
+        toast.error("Kích thước ảnh không được vượt quá 5MB");
         return;
       }
 
       if (!file.type.startsWith("image/")) {
-        setError("Vui lòng chọn file ảnh hợp lệ");
+        toast.error("Vui lòng chọn file ảnh hợp lệ");
         return;
       }
 
@@ -96,7 +95,6 @@ export const CreateBlog: React.FC = () => {
         setImagePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
-      setError("");
     }
   };
 
@@ -110,8 +108,6 @@ export const CreateBlog: React.FC = () => {
     if (!currentUser || !userProfile) return;
 
     try {
-      setError("");
-
       let imageUrl = data.imageUrl || "";
 
       if (imageFile) {
@@ -120,7 +116,7 @@ export const CreateBlog: React.FC = () => {
           imageUrl = await uploadImageToImgbb(imageFile);
         } catch (uploadError) {
           console.log(uploadError);
-          setError("Không thể tải ảnh lên. Vui lòng thử lại.");
+          toast.error("Không thể tải ảnh lên. Vui lòng thử lại.");
           return;
         } finally {
           setUploadingImage(false);
@@ -151,10 +147,11 @@ export const CreateBlog: React.FC = () => {
         updatedAt: new Date(),
       });
 
+      toast.success("Tạo bài viết thành công!");
       navigate("/dashboard");
     } catch (error) {
       console.error("Error creating blog:", error);
-      setError("Có lỗi xảy ra khi tạo bài viết");
+      toast.error("Có lỗi xảy ra khi tạo bài viết");
     }
   };
 
@@ -170,11 +167,6 @@ export const CreateBlog: React.FC = () => {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
               <div className="space-y-6">
                 <FormField
                   control={form.control}

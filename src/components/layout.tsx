@@ -1,10 +1,18 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
-import { LogOut, User, Settings, BookOpen, Home } from "lucide-react";
+import { LogOut, User, Settings, BookOpen, Home, Shield } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Footer } from "@/components/footer";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,6 +23,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHomePage = location.pathname === "/";
+  const isAdminPage = location.pathname.startsWith("/admin");
 
   const handleLogout = async () => {
     try {
@@ -24,6 +33,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       console.error("Failed to logout:", error);
     }
   };
+
+  if (isAdminPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -57,34 +70,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <Home className="h-4 w-4" />
                     <span>Trang chủ</span>
                   </Link>
-
-                  {userProfile?.role === "admin" ? (
-                    <Link
-                      to="/admin"
-                      className={cn(
-                        "flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                        location.pathname.startsWith("/admin")
-                          ? "text-primary bg-primary/10"
-                          : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                      )}
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>Quản trị</span>
-                    </Link>
-                  ) : (
-                    <Link
-                      to="/dashboard"
-                      className={cn(
-                        "flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                        location.pathname.startsWith("/dashboard")
-                          ? "text-primary bg-primary/10"
-                          : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                      )}
-                    >
-                      <User className="h-4 w-4" />
-                      <span>Dashboard</span>
-                    </Link>
-                  )}
                 </div>
               )}
             </div>
@@ -92,15 +77,73 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex items-center space-x-4">
               <ThemeToggle />
               {currentUser ? (
-                <>
-                  <span className="hidden sm:block text-sm text-muted-foreground">
-                    Xin chào, {userProfile?.displayName || currentUser.email}
-                  </span>
-                  <Button variant="outline" size="sm" onClick={handleLogout}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Đăng xuất</span>
-                  </Button>
-                </>
+                <div className="flex items-center space-x-4">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="relative h-10 w-10 rounded-full p-0"
+                      >
+                        {userProfile?.avatar ? (
+                          <img
+                            src={userProfile.avatar || "/placeholder.svg"}
+                            alt={userProfile.displayName || "Avatar"}
+                            className="h-10 w-10 rounded-full object-cover border-2 border-primary/20"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User className="h-5 w-5 text-primary" />
+                          </div>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      className="w-56"
+                      align="end"
+                      forceMount
+                    >
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">
+                            {userProfile?.displayName || currentUser.email}
+                          </p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {currentUser.email}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard" className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/edit-profile" className="cursor-pointer">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Chỉnh sửa hồ sơ</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      {userProfile?.role === "admin" && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin" className="cursor-pointer">
+                            <Shield className="mr-2 h-4 w-4" />
+                            <span>Quản trị</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="cursor-pointer"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Đăng xuất</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               ) : (
                 <div className="space-x-2">
                   <Button variant="outline" size="sm" asChild>

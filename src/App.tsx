@@ -15,8 +15,12 @@ import { Dashboard } from "@/pages/dashboard";
 import { CreateBlog } from "@/pages/create-blog";
 import { EditBlog } from "@/pages/edit-blog";
 import { BlogDetail } from "@/pages/blog-detail";
+import { EditProfile } from "@/pages/edit-profile";
+import { UserProfile } from "@/pages/user-profile";
 import { AdminDashboard } from "@/pages/admin/admin-dashboard";
 import { Categories } from "@/pages/admin/categories";
+import { BlogManagement } from "@/pages/admin/blog-management";
+import { UserManagement } from "@/pages/admin/user-management";
 
 function App() {
   return (
@@ -29,6 +33,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/blog/:id" element={<BlogDetail />} />
+              <Route path="/user/:userId" element={<UserProfile />} />
 
               <Route
                 path="/dashboard"
@@ -58,10 +63,37 @@ function App() {
               />
 
               <Route
+                path="/edit-profile"
+                element={
+                  <ProtectedRoute>
+                    <EditProfile />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
                 path="/admin"
                 element={
                   <ProtectedRoute adminOnly>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/blogs"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <BlogManagement />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <UserManagement />
                   </ProtectedRoute>
                 }
               />

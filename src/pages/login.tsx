@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,14 +20,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useAuth } from "@/contexts/auth-context";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { loginSchema, type LoginFormData } from "@/lib/validations";
 import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -40,23 +40,22 @@ export const Login: React.FC = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      setError("");
       await login(data.email, data.password);
       navigate("/");
     } catch (error: any) {
       console.error("Login error:", error);
       if (error.code === "auth/user-not-found") {
-        setError("Không tìm thấy tài khoản với email này");
+        toast.error("Không tìm thấy tài khoản với email này");
       } else if (error.code === "auth/wrong-password") {
-        setError("Mật khẩu không chính xác");
+        toast.error("Mật khẩu không chính xác");
       } else if (error.code === "auth/invalid-email") {
-        setError("Email không hợp lệ");
+        toast.error("Email không hợp lệ");
       } else if (error.code === "auth/user-disabled") {
-        setError("Tài khoản đã bị vô hiệu hóa");
+        toast.error("Tài khoản đã bị vô hiệu hóa");
       } else if (error.code === "auth/too-many-requests") {
-        setError("Quá nhiều lần thử. Vui lòng thử lại sau");
+        toast.error("Quá nhiều lần thử. Vui lòng thử lại sau");
       } else {
-        setError("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin");
+        toast.error("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin");
       }
     }
   };
@@ -73,12 +72,6 @@ export const Login: React.FC = () => {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
               <FormField
                 control={form.control}
                 name="email"
@@ -97,7 +90,6 @@ export const Login: React.FC = () => {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="password"
@@ -131,7 +123,6 @@ export const Login: React.FC = () => {
                   </FormItem>
                 )}
               />
-
               <Button
                 type="submit"
                 className="w-full"
@@ -148,7 +139,6 @@ export const Login: React.FC = () => {
               </Button>
             </form>
           </Form>
-
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Chưa có tài khoản?{" "}

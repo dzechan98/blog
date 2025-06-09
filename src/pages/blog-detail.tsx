@@ -1,4 +1,3 @@
-import type React from "react";
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
@@ -41,7 +40,6 @@ export const BlogDetail: React.FC = () => {
     fetchBlog();
   }, [id]);
 
-  // Estimate reading time based on content length
   const getReadingTime = (content: string) => {
     const wordsPerMinute = 200;
     const textLength = content.replace(/<[^>]*>/g, "").split(/\s+/).length;
@@ -76,7 +74,7 @@ export const BlogDetail: React.FC = () => {
   }
 
   return (
-    <div className="container py-6 mx-auto">
+    <div className="container mx-auto py-6">
       <div className="mb-6">
         <Button
           variant="outline"
@@ -87,9 +85,7 @@ export const BlogDetail: React.FC = () => {
           Quay lại
         </Button>
       </div>
-
       <article className="bg-card rounded-lg shadow-sm overflow-hidden">
-        {/* Featured Image */}
         {blog.imageUrl && (
           <div className="w-full h-[400px] overflow-hidden">
             <img
@@ -99,9 +95,7 @@ export const BlogDetail: React.FC = () => {
             />
           </div>
         )}
-
         <div className="p-8">
-          {/* Header */}
           <header className="mb-8">
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <Badge className="px-3 py-1">{blog.categoryName}</Badge>
@@ -111,7 +105,12 @@ export const BlogDetail: React.FC = () => {
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <User className="h-4 w-4 mr-1" />
-                {blog.authorName}
+                <Link
+                  to={`/user/${blog.authorId}`}
+                  className="hover:text-primary transition-colors hover:underline"
+                >
+                  {blog.authorName}
+                </Link>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-1" />
@@ -122,9 +121,7 @@ export const BlogDetail: React.FC = () => {
                 {Math.floor(Math.random() * 100) + 10} lượt xem
               </div>
             </div>
-
             <h1 className="text-4xl font-bold mb-6">{blog.title}</h1>
-
             {blog.tags && blog.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-4">
                 {blog.tags.map((tag, index) => (
@@ -135,13 +132,9 @@ export const BlogDetail: React.FC = () => {
               </div>
             )}
           </header>
-
-          {/* Content */}
           <div className="prose prose-lg max-w-none dark:prose-invert">
             <div dangerouslySetInnerHTML={{ __html: blog.content }} />
           </div>
-
-          {/* Footer */}
           <footer className="mt-12 pt-6 border-t border-border">
             <div className="flex justify-between items-center">
               <div className="text-sm text-muted-foreground">

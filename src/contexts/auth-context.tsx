@@ -22,6 +22,7 @@ interface AuthContextType {
   ) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -72,6 +73,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await signOut(auth);
   };
 
+  const refreshUserProfile = async () => {
+    if (currentUser) {
+      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+      if (userDoc.exists()) {
+        setUserProfile(userDoc.data() as User);
+      }
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
@@ -98,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     register,
     logout,
     loading,
+    refreshUserProfile,
   };
 
   return (

@@ -89,22 +89,16 @@ export const Home: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("Fetching published blogs...");
         const blogsQuery = query(
           collection(db, "blogs"),
           where("published", "==", true),
           orderBy("createdAt", "desc")
         );
         const blogsSnapshot = await getDocs(blogsQuery);
-        console.log("Published blogs count:", blogsSnapshot.size);
 
         const blogsData = blogsSnapshot.docs.map((doc) => {
           const data = doc.data();
-          console.log("Blog data:", {
-            id: doc.id,
-            title: data.title,
-            published: data.published,
-          });
+
           return {
             id: doc.id,
             ...data,
@@ -113,7 +107,6 @@ export const Home: React.FC = () => {
           };
         }) as Blog[];
 
-        console.log("Processed blogs data:", blogsData);
         setAllBlogs(blogsData);
 
         const categoriesQuery = query(

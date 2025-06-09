@@ -5,6 +5,8 @@ export interface User {
   role: "admin" | "user";
   createdAt: Date;
   avatar?: string;
+  bio?: string;
+  updatedAt?: Date;
 }
 
 export interface Category {
