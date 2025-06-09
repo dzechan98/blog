@@ -24,7 +24,6 @@ export interface FilterState {
   search: string;
   category: string;
   sortBy: "newest" | "oldest" | "title-asc" | "title-desc";
-  tags: string[];
 }
 
 interface BlogFiltersProps {
@@ -72,33 +71,16 @@ export const BlogFilters: React.FC<BlogFiltersProps> = ({
     onFiltersChange({ ...filters, sortBy: value });
   };
 
-  const handleTagAdd = (tag: string) => {
-    if (tag && !filters.tags.includes(tag)) {
-      onFiltersChange({ ...filters, tags: [...filters.tags, tag] });
-    }
-  };
-
-  const handleTagRemove = (tag: string) => {
-    onFiltersChange({
-      ...filters,
-      tags: filters.tags.filter((t) => t !== tag),
-    });
-  };
-
   const clearFilters = () => {
     onFiltersChange({
       search: "",
       category: "",
       sortBy: "newest",
-      tags: [],
     });
   };
 
   const hasActiveFilters =
-    filters.search ||
-    filters.category ||
-    filters.tags.length > 0 ||
-    filters.sortBy !== "newest";
+    filters.search || filters.category || filters.sortBy !== "newest";
 
   return (
     <div className="space-y-4 p-4 bg-card rounded-lg border border-border">
@@ -172,48 +154,6 @@ export const BlogFilters: React.FC<BlogFiltersProps> = ({
           </Button>
         </div>
       </div>
-
-      {/* Advanced Filters */}
-      {showAdvanced && (
-        <div className="space-y-3 pt-3 border-t border-border">
-          <div>
-            <label className="text-sm font-medium mb-2 block">
-              Lọc theo tags
-            </label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Nhập tag và nhấn Enter"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    const target = e.target as HTMLInputElement;
-                    handleTagAdd(target.value.trim());
-                    target.value = "";
-                  }
-                }}
-                className="flex-1"
-              />
-            </div>
-            {filters.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {filters.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
-                    {tag}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto p-0 ml-1 hover:bg-transparent"
-                      onClick={() => handleTagRemove(tag)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Results and Clear */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">

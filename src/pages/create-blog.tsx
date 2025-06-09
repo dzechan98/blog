@@ -12,8 +12,6 @@ import { useAuth } from "@/contexts/auth-context";
 import type { Category } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -32,11 +30,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { RichTextEditor } from "@/components/rich-text-editor";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { blogSchema, type BlogFormData } from "@/lib/validations";
 import { uploadImageToImgbb } from "@/lib/image-upload";
-import { X, ImageIcon, Loader2 } from "lucide-react";
+import { X, ImageIcon, Loader2, FileText } from "lucide-react";
 
 export const CreateBlog: React.FC = () => {
   const { currentUser, userProfile } = useAuth();
@@ -160,10 +159,13 @@ export const CreateBlog: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <Card>
-        <CardHeader>
-          <CardTitle>Tạo bài viết mới</CardTitle>
+        <CardHeader className="border-b">
+          <CardTitle className="flex items-center">
+            <FileText className="h-6 w-6 mr-2" />
+            Tạo bài viết mới
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -173,178 +175,182 @@ export const CreateBlog: React.FC = () => {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tiêu đề *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nhập tiêu đề bài viết" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="categoryId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Danh mục *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+              <div className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">
+                        Tiêu đề bài viết *
+                      </FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn danh mục" />
-                        </SelectTrigger>
+                        <Input placeholder="Nhập tiêu đề bài viết" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Image Upload */}
-              <div className="space-y-2">
-                <Label>Ảnh bài viết</Label>
-                <div className="border-2 border-dashed border-border rounded-lg p-6">
-                  {imagePreview ? (
-                    <div className="space-y-4">
-                      <div className="relative">
-                        <img
-                          src={imagePreview || "/placeholder.svg"}
-                          alt="Preview"
-                          className="w-full h-48 object-cover rounded-lg"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          className="absolute top-2 right-2"
-                          onClick={removeImage}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          Kéo thả ảnh vào đây hoặc click để chọn
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          PNG, JPG, GIF tối đa 5MB
-                        </p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() =>
-                            document.getElementById("image-upload")?.click()
-                          }
-                        >
-                          Chọn ảnh
-                        </Button>
-                      </div>
-                    </div>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <Input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
                 />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tags</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Nhập các tag, cách nhau bằng dấu phẩy"
-                        {...field}
-                      />
-                    </FormControl>
-                    <p className="text-sm text-muted-foreground">
-                      Ví dụ: công nghệ, lập trình, web development
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nội dung *</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Viết nội dung bài viết của bạn..."
-                        rows={15}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="published"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Xuất bản ngay</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex space-x-4">
-                <Button
-                  type="submit"
-                  disabled={form.formState.isSubmitting || uploadingImage}
-                >
-                  {form.formState.isSubmitting || uploadingImage ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {uploadingImage ? "Đang tải ảnh..." : "Đang tạo..."}
-                    </>
-                  ) : (
-                    "Tạo bài viết"
+                <div className="grid items-start grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="categoryId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Danh mục *</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl className="w-full">
+                            <SelectTrigger>
+                              <SelectValue placeholder="Chọn danh mục" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {categories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tags</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Nhập các tag, cách nhau bằng dấu phẩy"
+                            {...field}
+                          />
+                        </FormControl>
+                        <p className="text-sm text-muted-foreground">
+                          Ví dụ: công nghệ, lập trình, web development
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold">Ảnh</h3>
+                  <div className="border-2 border-dashed border-border rounded-lg p-6">
+                    {imagePreview ? (
+                      <div className="space-y-4">
+                        <div className="relative">
+                          <img
+                            src={imagePreview || "/placeholder.svg"}
+                            alt="Preview"
+                            className="w-full h-60 object-contain rounded-lg"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2"
+                            onClick={removeImage}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">
+                            Kéo thả ảnh vào đây hoặc click để chọn
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            PNG, JPG, GIF tối đa 5MB
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() =>
+                              document.getElementById("image-upload")?.click()
+                            }
+                          >
+                            Chọn ảnh
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <Input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">
+                        Nội dung bài viết *
+                      </FormLabel>
+                      <FormControl>
+                        <RichTextEditor
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Viết nội dung bài viết của bạn..."
+                          className="mb-6"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/dashboard")}
-                >
-                  Hủy
-                </Button>
+                />
+                <FormField
+                  control={form.control}
+                  name="published"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Xuất bản ngay</FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-y-2 gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate("/dashboard")}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={form.formState.isSubmitting || uploadingImage}
+                  >
+                    {form.formState.isSubmitting || uploadingImage ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {uploadingImage ? "Đang tải ảnh..." : "Đang tạo..."}
+                      </>
+                    ) : (
+                      "Tạo bài viết"
+                    )}
+                  </Button>
+                </div>
               </div>
             </form>
           </Form>

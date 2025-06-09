@@ -40,7 +40,7 @@ export const blogSchema = z.object({
     .min(50, "Nội dung phải có ít nhất 50 ký tự"),
   categoryId: z.string().min(1, "Danh mục là bắt buộc"),
   imageUrl: z.string().url("URL ảnh không hợp lệ").optional().or(z.literal("")),
-  tags: z.string().optional(),
+  tags: z.string().min(1, "Ít nhất một thẻ là bắt buộc"),
   published: z.boolean().default(false).optional(),
 });
 

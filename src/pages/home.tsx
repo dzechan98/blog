@@ -45,7 +45,6 @@ export const Home: React.FC = () => {
     search: "",
     category: "",
     sortBy: "newest",
-    tags: [],
   });
 
   const filteredBlogs = useMemo(() => {
@@ -64,16 +63,6 @@ export const Home: React.FC = () => {
     if (filters.category) {
       filtered = filtered.filter(
         (blog) => blog.categoryId === filters.category
-      );
-    }
-
-    if (filters.tags.length > 0) {
-      filtered = filtered.filter((blog) =>
-        filters.tags.some((tag) =>
-          blog.tags.some((blogTag) =>
-            blogTag.toLowerCase().includes(tag.toLowerCase())
-          )
-        )
       );
     }
 
@@ -240,12 +229,6 @@ export const Home: React.FC = () => {
         </Card>
       </section>
 
-      {/* Debug info */}
-      <div className="text-sm text-muted-foreground">
-        Debug: Tổng blogs: {allBlogs.length}, Filtered: {filteredBlogs.length},
-        Featured: {featuredBlogs.length}
-      </div>
-
       {/* Filters */}
       <BlogFilters
         filters={filters}
@@ -260,12 +243,12 @@ export const Home: React.FC = () => {
             <div>
               <h2 className="text-3xl font-bold text-foreground flex items-center">
                 <TrendingUp className="h-8 w-8 mr-3 text-orange-600" />
-                {filters.search || filters.category || filters.tags.length > 0
+                {filters.search || filters.category
                   ? "Kết quả tìm kiếm"
                   : "Bài viết nổi bật"}
               </h2>
               <p className="text-muted-foreground mt-2">
-                {filters.search || filters.category || filters.tags.length > 0
+                {filters.search || filters.category
                   ? "Các bài viết phù hợp với bộ lọc của bạn"
                   : "Những bài viết mới nhất và được quan tâm nhiều nhất"}
               </p>
@@ -276,11 +259,8 @@ export const Home: React.FC = () => {
             {featuredBlogs.map((blog, index) => (
               <Card
                 key={blog.id}
-                className={`hover:shadow-xl transition-all duration-300 ${
-                  index === 0 &&
-                  !filters.search &&
-                  !filters.category &&
-                  filters.tags.length === 0
+                className={`hover:shadow-xl transition-all duration-300 pt-0 overflow-hidden ${
+                  index === 0 && !filters.search && !filters.category
                     ? "lg:col-span-2 lg:row-span-2"
                     : ""
                 }`}
@@ -308,10 +288,7 @@ export const Home: React.FC = () => {
                   </div>
                   <CardTitle
                     className={`line-clamp-2 ${
-                      index === 0 &&
-                      !filters.search &&
-                      !filters.category &&
-                      filters.tags.length === 0
+                      index === 0 && !filters.search && !filters.category
                         ? "text-2xl"
                         : "text-lg"
                     }`}
@@ -325,10 +302,7 @@ export const Home: React.FC = () => {
                   </CardTitle>
                   <CardDescription
                     className={`${
-                      index === 0 &&
-                      !filters.search &&
-                      !filters.category &&
-                      filters.tags.length === 0
+                      index === 0 && !filters.search && !filters.category
                         ? "line-clamp-4"
                         : "line-clamp-3"
                     }`}
@@ -373,40 +347,37 @@ export const Home: React.FC = () => {
       )}
 
       {/* Categories Section - Only show if no filters applied */}
-      {categories.length > 0 &&
-        !filters.search &&
-        !filters.category &&
-        filters.tags.length === 0 && (
-          <section>
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-foreground mb-4">
-                Khám phá theo chủ đề
-              </h2>
-              <p className="text-muted-foreground">
-                Tìm hiểu các bài viết theo từng lĩnh vực quan tâm
-              </p>
-            </div>
+      {categories.length > 0 && !filters.search && !filters.category && (
+        <section>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
+              Khám phá theo chủ đề
+            </h2>
+            <p className="text-muted-foreground">
+              Tìm hiểu các bài viết theo từng lĩnh vực quan tâm
+            </p>
+          </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {categories.map((category) => (
-                <Card
-                  key={category.id}
-                  className="hover:shadow-lg transition-shadow cursor-pointer group"
-                >
-                  <CardHeader className="text-center">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                      <BookOpen className="h-6 w-6 text-white" />
-                    </div>
-                    <CardTitle className="group-hover:text-primary transition-colors">
-                      {category.name}
-                    </CardTitle>
-                    <CardDescription>{category.description}</CardDescription>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
-          </section>
-        )}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {categories.map((category) => (
+              <Card
+                key={category.id}
+                className="hover:shadow-lg transition-shadow cursor-pointer group"
+              >
+                <CardHeader className="text-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <BookOpen className="h-6 w-6 text-white" />
+                  </div>
+                  <CardTitle className="group-hover:text-primary transition-colors">
+                    {category.name}
+                  </CardTitle>
+                  <CardDescription>{category.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Recent Blogs */}
       {recentBlogs.length > 0 && (
@@ -414,12 +385,12 @@ export const Home: React.FC = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-foreground">
-                {filters.search || filters.category || filters.tags.length > 0
+                {filters.search || filters.category
                   ? "Thêm kết quả"
                   : "Bài viết gần đây"}
               </h2>
               <p className="text-muted-foreground mt-2">
-                {filters.search || filters.category || filters.tags.length > 0
+                {filters.search || filters.category
                   ? "Các bài viết khác phù hợp"
                   : "Cập nhật những nội dung mới nhất từ cộng đồng"}
               </p>
@@ -490,8 +461,7 @@ export const Home: React.FC = () => {
         </section>
       )}
 
-      {/* Call to Action - Only show if no filters applied */}
-      {!filters.search && !filters.category && filters.tags.length === 0 && (
+      {!filters.search && !filters.category && (
         <section className="text-center py-12 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-2xl">
           <div className="max-w-2xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-foreground mb-4">
