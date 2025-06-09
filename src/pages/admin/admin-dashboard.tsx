@@ -12,6 +12,7 @@ import {
   ArrowRight,
   TrendingUp,
   Calendar,
+  LoaderCircle,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/layout";
 
@@ -74,8 +75,8 @@ export const AdminDashboard: React.FC = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg">Đang tải...</div>
+        <div className="flex min-h-screen justify-center items-center">
+          <LoaderCircle className="animate-spin h-8 w-8 text-primary" />
         </div>
       </AdminLayout>
     );

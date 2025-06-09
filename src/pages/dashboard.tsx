@@ -21,7 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, LoaderCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const Dashboard: React.FC = () => {
@@ -85,8 +85,8 @@ export const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Đang tải...</div>
+      <div className="flex min-h-screen justify-center items-center">
+        <LoaderCircle className="animate-spin h-8 w-8 text-primary" />
       </div>
     );
   }

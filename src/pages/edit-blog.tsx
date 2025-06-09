@@ -36,7 +36,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { blogSchema, type BlogFormData } from "@/lib/validations";
 import { uploadImageToImgbb } from "@/lib/image-upload";
-import { X, ImageIcon, Loader2, Edit } from "lucide-react";
+import { X, ImageIcon, Loader2, Edit, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export const EditBlog: React.FC = () => {
@@ -198,8 +198,8 @@ export const EditBlog: React.FC = () => {
 
   if (initialLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Đang tải...</div>
+      <div className="flex min-h-screen justify-center items-center">
+        <LoaderCircle className="animate-spin h-8 w-8 text-primary" />
       </div>
     );
   }

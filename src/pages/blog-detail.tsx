@@ -5,7 +5,14 @@ import { db } from "@/lib/firebase";
 import type { Blog } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, User, ArrowLeft, Clock, Eye } from "lucide-react";
+import {
+  Calendar,
+  User,
+  ArrowLeft,
+  Clock,
+  Eye,
+  LoaderCircle,
+} from "lucide-react";
 
 export const BlogDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -62,8 +69,8 @@ export const BlogDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Đang tải...</div>
+      <div className="flex min-h-screen justify-center items-center">
+        <LoaderCircle className="animate-spin h-8 w-8 text-primary" />
       </div>
     );
   }

@@ -28,6 +28,7 @@ import {
   FileText,
   Clock,
   Eye,
+  LoaderCircle,
 } from "lucide-react";
 
 export const UserProfile: React.FC = () => {
@@ -93,8 +94,8 @@ export const UserProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Đang tải...</div>
+      <div className="flex min-h-screen justify-center items-center">
+        <LoaderCircle className="animate-spin h-8 w-8 text-primary" />
       </div>
     );
   }

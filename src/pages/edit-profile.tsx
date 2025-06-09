@@ -26,7 +26,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { uploadImageToImgbb } from "@/lib/image-upload";
-import { X, ImageIcon, Loader2, User, Save, EyeOff, Eye } from "lucide-react";
+import {
+  X,
+  ImageIcon,
+  Loader2,
+  User,
+  Save,
+  EyeOff,
+  Eye,
+  LoaderCircle,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
@@ -191,8 +200,8 @@ export const EditProfile: React.FC = () => {
 
   if (!currentUser || !userProfile) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Đang tải...</div>
+      <div className="flex min-h-screen justify-center items-center">
+        <LoaderCircle className="animate-spin h-8 w-8 text-primary" />
       </div>
     );
   }
