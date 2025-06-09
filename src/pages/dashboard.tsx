@@ -30,8 +30,12 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "Dashboard";
     const fetchUserBlogs = async () => {
-      if (!currentUser) return;
+      if (!currentUser) {
+        setLoading(false);
+        return;
+      }
 
       try {
         console.log("Fetching blogs for user:", currentUser.uid);

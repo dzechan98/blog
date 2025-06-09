@@ -67,6 +67,7 @@ export const BlogManagement: React.FC = () => {
   >("all");
 
   useEffect(() => {
+    document.title = "Quản lý bài viết - Admin";
     const fetchBlogs = async () => {
       try {
         const q = query(collection(db, "blogs"), orderBy("createdAt", "desc"));

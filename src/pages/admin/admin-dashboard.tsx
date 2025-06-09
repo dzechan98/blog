@@ -26,6 +26,7 @@ export const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "Admin Dashboard - BlogApp";
     const fetchStats = async () => {
       try {
         const usersSnapshot = await getDocs(collection(db, "users"));

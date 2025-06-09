@@ -37,8 +37,13 @@ export const UserProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "Đang tải hồ sơ...";
     const fetchUserData = async () => {
-      if (!userId) return;
+      if (!userId) {
+        setLoading(false);
+        document.title = "Không tìm thấy người dùng";
+        return;
+      }
 
       try {
         const userDoc = await getDoc(doc(db, "users", userId));
@@ -49,6 +54,9 @@ export const UserProfile: React.FC = () => {
             createdAt: userDoc.data().createdAt?.toDate(),
           } as User;
           setUser(userData);
+          document.title = `Hồ sơ của ${userData.displayName}`;
+        } else {
+          document.title = "Không tìm thấy người dùng";
         }
 
         const blogsQuery = query(
@@ -67,6 +75,7 @@ export const UserProfile: React.FC = () => {
         setUserBlogs(blogsData);
       } catch (error) {
         console.error("Error fetching user data:", error);
+        document.title = "Lỗi tải hồ sơ";
       } finally {
         setLoading(false);
       }

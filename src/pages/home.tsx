@@ -87,6 +87,7 @@ export const Home: React.FC = () => {
   const recentBlogs = filteredBlogs.slice(3, 12);
 
   useEffect(() => {
+    document.title = "Trang chủ - BlogApp";
     const fetchData = async () => {
       try {
         const blogsQuery = query(

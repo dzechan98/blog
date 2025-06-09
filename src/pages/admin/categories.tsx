@@ -78,6 +78,7 @@ export const Categories: React.FC = () => {
   });
 
   useEffect(() => {
+    document.title = "Quản lý danh mục - Admin";
     const fetchCategories = async () => {
       try {
         const q = query(collection(db, "categories"), orderBy("name"));

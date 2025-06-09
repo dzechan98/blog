@@ -63,8 +63,13 @@ export const EditBlog: React.FC = () => {
   });
 
   useEffect(() => {
+    document.title = "Chỉnh sửa bài viết";
     const fetchData = async () => {
-      if (!id) return;
+      if (!id) {
+        setInitialLoading(false);
+        navigate("/dashboard"); // Or a 404 page
+        return;
+      }
 
       try {
         const blogDoc = await getDoc(doc(db, "blogs", id));
@@ -72,10 +77,11 @@ export const EditBlog: React.FC = () => {
           const blogData = blogDoc.data() as Blog;
 
           if (blogData.authorId !== currentUser?.uid) {
+            toast.error("Bạn không có quyền chỉnh sửa bài viết này.");
             navigate("/dashboard");
             return;
           }
-
+          document.title = `Chỉnh sửa: ${blogData.title}`;
           form.setValue("title", blogData.title);
           form.setValue("content", blogData.content);
           form.setValue("categoryId", blogData.categoryId);
@@ -87,6 +93,10 @@ export const EditBlog: React.FC = () => {
             setCurrentImageUrl(blogData.imageUrl);
             setImagePreview(blogData.imageUrl);
           }
+        } else {
+          toast.error("Không tìm thấy bài viết.");
+          document.title = "Không tìm thấy bài viết";
+          navigate("/dashboard"); // Or a 404 page
         }
 
         const q = query(collection(db, "categories"), orderBy("name"));
@@ -100,6 +110,7 @@ export const EditBlog: React.FC = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Có lỗi xảy ra khi tải dữ liệu");
+        document.title = "Lỗi tải dữ liệu";
       } finally {
         setInitialLoading(false);
       }

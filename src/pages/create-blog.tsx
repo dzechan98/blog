@@ -58,6 +58,7 @@ export const CreateBlog: React.FC = () => {
   });
 
   useEffect(() => {
+    document.title = "Tạo bài viết mới";
     const fetchCategories = async () => {
       try {
         const q = query(collection(db, "categories"), orderBy("name"));

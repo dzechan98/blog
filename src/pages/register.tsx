@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/form";
 import { useAuth } from "@/contexts/auth-context";
 import { registerSchema, type RegisterFormData } from "@/lib/validations";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -61,6 +61,10 @@ export const Register: React.FC = () => {
       }
     }
   };
+
+  useEffect(() => {
+    document.title = "Đăng ký - BlogApp";
+  }, []);
 
   return (
     <div className="flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">

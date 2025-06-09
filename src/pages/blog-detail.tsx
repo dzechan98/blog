@@ -14,8 +14,13 @@ export const BlogDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "Đang tải bài viết...";
     const fetchBlog = async () => {
-      if (!id) return;
+      if (!id) {
+        setLoading(false);
+        document.title = "Không tìm thấy bài viết";
+        return;
+      }
 
       try {
         const docRef = doc(db, "blogs", id);
@@ -29,9 +34,13 @@ export const BlogDetail: React.FC = () => {
             updatedAt: docSnap.data().updatedAt?.toDate(),
           } as Blog;
           setBlog(blogData);
+          document.title = blogData.title;
+        } else {
+          document.title = "Không tìm thấy bài viết";
         }
       } catch (error) {
         console.error("Error fetching blog:", error);
+        document.title = "Lỗi tải bài viết";
       } finally {
         setLoading(false);
       }

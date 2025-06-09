@@ -61,6 +61,7 @@ export const UserManagement: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
 
   useEffect(() => {
+    document.title = "Quản lý người dùng - Admin";
     const fetchUsers = async () => {
       try {
         const q = query(collection(db, "users"), orderBy("createdAt", "desc"));

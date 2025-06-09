@@ -86,6 +86,7 @@ export const EditProfile: React.FC = () => {
   });
 
   useEffect(() => {
+    document.title = "Chỉnh sửa thông tin cá nhân";
     if (userProfile) {
       profileForm.setValue("displayName", userProfile.displayName || "");
       profileForm.setValue("bio", userProfile.bio || "");
