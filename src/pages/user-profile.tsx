@@ -185,7 +185,10 @@ export const UserProfile: React.FC = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {userBlogs.map((blog) => (
-              <Card key={blog.id} className="hover:shadow-lg transition-shadow">
+              <Card
+                key={blog.id}
+                className="pt-0 overflow-hidden hover:shadow-lg transition-shadow"
+              >
                 {blog.imageUrl ? (
                   <div className="aspect-video overflow-hidden rounded-t-lg">
                     <img
